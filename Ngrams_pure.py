@@ -1,10 +1,12 @@
 #!/home/rudraksh/anaconda2/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import re
 import codecs
 import pickle
 from math import log, exp
+import operator
 
 class Vocab():
     """ A general vocabulary class which can be used for purposes
@@ -83,16 +85,15 @@ class Vocab():
     @property
     def total_num_words(self):
         return len(self._vocab)
-                            
+
+# Function for making N-grams                             
 def find_ngrams(input_list, n):
-	""" Function for making N-grams """
     return zip(*[input_list[i:] for i in range(n)])
 
 
 class Bigrams():
     """ Class for dealing with bigrams."""
-    def __init__(self, vocab):
-        self.vocab = vocab
+    def __init__(self):
         self._bigrams = {}
         self._num_bigrams = 0
         self._unique_bigrams = 0
@@ -149,7 +150,7 @@ class Bigrams():
             self._num_bigrams += 1
             self._unique_bigrams += 1
             
-    def new_bigrams_bigrams(self, _vocab = None, method='simple', min_word_count = 0.0):
+    def smoothen(self, vocab, method='simple', min_word_count = 0.0):
         """ Function to smoothen bigrams.
             Args:
         
@@ -165,8 +166,7 @@ class Bigrams():
             _vocab: Specify some other vocabulary for smoothing the bigrams.
             
             """
-        if _vocab is None:
-            _vocab = self.vocab
+        _vocab = vocab
 
         # Simple Normalizing criteria
         if method == 'simple':
@@ -318,7 +318,7 @@ class Model():
     def predict(self, sentence, n, preprocess=False):
         """ Predicts the next word in the sequence. """
         if not self.calc:
-            self.top()
+            self._top()
         
         if preprocess:
             pass  # Add your custom functon here!
@@ -328,15 +328,15 @@ class Model():
         if len(words) > 1:
             # Get last two words of the sequence.
             l2 = words[-2:]
-            return self.topn[l2[1]][:n]
+            return self._topn[l2[1]][:n]
         else:
-            return self.topn[words[0]][:n]                
-    def top(self):
+            return self._topn[words[0]][:n]                
+    def _top(self):
         """ Sorts the bigram for each word by probability"""
-        self.topn = {}       
+        self._topn = {}       
         for key,words in self.bigrams.items():
             sorted_words = sorted(words.items(), key=operator.itemgetter(1),
                                   reverse=True)
             
-            self.topn[key] = sorted_words
+            self._topn[key] = sorted_words
         self.calc = True
